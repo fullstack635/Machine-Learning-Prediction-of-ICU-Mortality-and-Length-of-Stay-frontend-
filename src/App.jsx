@@ -1,11 +1,31 @@
 import React, { useState } from 'react'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '')
 
 export default function App() {
   console.log('App component is rendering!')
   
   const [activeTab, setActiveTab] = useState('primary')
+  
+  // Test backend connection on component mount
+  React.useEffect(() => {
+    const testConnection = async () => {
+      try {
+        const healthUrl = `${API_URL}/health`
+        console.log('Testing backend connection:', healthUrl)
+        const response = await fetch(healthUrl)
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Backend health check:', data)
+        } else {
+          console.error('Backend health check failed:', response.status)
+        }
+      } catch (error) {
+        console.error('Backend connection error:', error)
+      }
+    }
+    testConnection()
+  }, [])
   
   // Generate 57 features (50 numerical + 7 categorical) arranged in 7x8 grid = 56 (with 1 empty)
   const generateRandomFeatures = () => {
@@ -139,7 +159,11 @@ export default function App() {
 
     try {
       const endpoint = activeTab === 'primary' ? '/predict' : '/predict-los'
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const fullUrl = `${API_URL}${endpoint}`
+      console.log('Making request to:', fullUrl)
+      console.log('API_URL:', API_URL)
+      console.log('Endpoint:', endpoint)
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
